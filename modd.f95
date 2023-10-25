@@ -1,5 +1,4 @@
 module modd
-use matrix_solver
 implicit none
 real(8) :: pi = 4 * atan(1.d0)
 
