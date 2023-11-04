@@ -20,14 +20,13 @@ read(1, *) x_left
 read(1, *) x_right
 end subroutine InitializeParameters
 
-subroutine InitializeGrid(N, C, D, x_left, x_right, x, dx, dt)   !непонятно, что с t делать
+subroutine InitializeGrid(N, C, D, x_left, x_right, x, lambda, dx, dt)   !непонятно, что с t делать
 ! Subroutine for initialising the grid
 real(8) :: x_left, x_right, C, D
 integer :: N, i
 real(8) :: dx, dt, x(0:N-1)
 dx = (x_right - x_left) / (N - 1)
-!dt = C * dx / D
-! dt = dx**2 corresponds to C = D
+dt = C * dx / lambda
 x(0) = x_left; x(N-1) = x_right
 do i = 1, N-2
 	x(i) = x(i-1) + dx
@@ -37,5 +36,17 @@ end subroutine InitializeGrid
 subroutine Scheme()
 
 end subroutine Scheme
+
+subroutine CalcLambda(N, rho, v, p, lambda)
+!Subroutine for lambda calculation
+real(8) :: rho(:), v(:), p(:)
+real(8) :: lambda, cs
+integer :: N, i
+lambda = 0
+do i = 0, N-1
+ cs = sqrt(g * p(i) / rho(i))
+ max(lambda, abs(v(i)) + cs)
+enddo
+end subroutine CalcLambda
 
 end module
