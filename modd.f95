@@ -1,6 +1,5 @@
 module modd
 implicit none
-real(8) :: pi = 4 * atan(1.d0)
 real(8) :: g = 5.d0/3.d0
 
 contains
@@ -11,31 +10,14 @@ integer :: N, i
 real(8) :: C, t_stop, x_left, x_right
 real(8), allocatable :: u_left(:), u_right(:)
 open(unit = 1, file = 'INPUT')
-read(1, *) (u_left(i), i=1,3)
-read(1, *) (u_right(i), i=1,3)
+read(1, *) (u_left(i), i=0,2)
+read(1, *) (u_right(i), i=0,2)
 read(1, *) t_stop
 read(1, *) N
 read(1, *) C
 read(1, *) x_left
 read(1, *) x_right
 end subroutine InitializeParameters
-
-subroutine InitializeGrid(N, C, D, x_left, x_right, x, lambda, dx, dt)   !непонятно, что с t делать
-! Subroutine for initialising the grid
-real(8) :: x_left, x_right, C, D
-integer :: N, i
-real(8) :: dx, dt, x(0:N-1)
-dx = (x_right - x_left) / (N - 1)
-dt = C * dx / lambda
-x(0) = x_left; x(N-1) = x_right
-do i = 1, N-2
-	x(i) = x(i-1) + dx
-enddo
-end subroutine InitializeGrid
-
-subroutine Scheme()
-
-end subroutine Scheme
 
 subroutine CalcLambda(N, rho, v, p, lambda)
 !Subroutine for lambda calculation
@@ -48,5 +30,33 @@ do i = 0, N-1
  lambda = max(lambda, abs(v(i)) + cs)
 enddo
 end subroutine CalcLambda
+
+subroutine InitializeGrid(N, C, x_left, x_right, x, lambda, dx, dt)   !непонятно, что с t делать
+! Subroutine for initialising the grid
+real(8) :: x_left, x_right, C
+integer :: N, i
+real(8) :: dx, dt, x(0:N-1)
+dx = (x_right - x_left) / (N - 1)
+dt = C * dx / lambda
+x(0) = x_left; x(N-1) = x_right
+do i = 1, N-2
+	x(i) = x(i-1) + dx
+enddo
+end subroutine InitializeGrid
+
+subroutine CalcEps(N, rho, p, eps)
+!Subroutine for energy calculation
+real(8) :: rho(:), p(:)
+real(8) :: eps(:)
+integer :: N, i
+do i = 0, N-1
+ eps(i) = p(i) / (rho(i)*(g-1))
+enddo
+end subroutine CalcEps
+
+subroutine Scheme()
+!Calculation subroutine according to Lax-Friedrichs scheme
+
+end subroutine Scheme
 
 end module
