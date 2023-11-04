@@ -54,6 +54,42 @@ do i = 0, N-1
 enddo
 end subroutine CalcEps
 
+subroutine Flux(N, rho, v, p, lambda, F_next, F_last)
+!Subroutine for flux calculation according to Lax-Friedrichs scheme
+integer :: i, N
+real(8) :: rho(:), v(:), p(:)
+real(8) :: F(:,:), U(:,:)
+real(8) :: F_next(:,:), F_last(:,:)
+!Components of u and F vectors according (6.74)
+allocate(F(3,N), U(3,N))
+do i = 0, N-1
+ F(0,i) = rho(i) * v(i)
+ U(0,i) = rho(i)
+ F(1,i) = rho(i) * v(i)**2 + p(i)
+ U(1,i) = f1(i)
+ F(2,i) = rho(i) * v(i) * (eps(i) + v(i)**2 / 2.0d0 + p(i) / rho(i))
+ U(2,i) = rho(i) * (eps(i) + v(i)**2 / 2.0d0)
+enddo
+!F_next == F_(x+1/2); F_last == F_(x-1/2) in Lax-Friedrichs scheme 
+do i = 0, N-2
+ F_next(0,i) = 0.5d0 * (F(0,i) + F(0,i+1) - lambda * (U(0,i+1) - U(0,i)))
+ F_next(1,i) = 0.5d0 * (F(1,i) + F(1,i+1) - lambda * (U(1,i+1) - U(1,i)))
+ F_next(2,i) = 0.5d0 * (F(2,i) + F(2,i+1) - lambda * (U(2,i+1) - U(2,i)))
+enddo
+F_next(0,N-1) = F(0,N-1)
+F_next(1,N-1) = F(1,N-1)
+F_next(2,N-1) = F(2,N-1)
+F_last(0,0) = F(0,0)
+F_last(1,0) = F(1,0)
+F_last(2,0) = F(2,0)
+do i = 1, N-1
+ F_last(0,i) = 0.5d0 * (F(0,i-1) + F(0,i) - lambda * (U(0,i) - U(0,i-1)))
+ F_last(1,i) = 0.5d0 * (F(1,i-1) + F(1,i) - lambda * (U(1,i) - U(1,i-1)))
+ F_last(2,i) = 0.5d0 * (F(2,i-1) + F(2,i) - lambda * (U(2,i) - U(2,i-1)))
+enddo
+deallocate(F(3,N), U(3,N))
+end subroutine Flux
+
 subroutine Scheme()
 !Calculation subroutine according to Lax-Friedrichs scheme
 
