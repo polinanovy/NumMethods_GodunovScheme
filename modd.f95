@@ -45,7 +45,7 @@ integer :: N, i
 lambda = 0
 do i = 0, N-1
  cs = sqrt(g * p(i) / rho(i))
- max(lambda, abs(v(i)) + cs)
+ lambda = max(lambda, abs(v(i)) + cs)
 enddo
 end subroutine CalcLambda
 
