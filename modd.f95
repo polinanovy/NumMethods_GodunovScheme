@@ -70,7 +70,7 @@ do i = 0, N-1
  F(2,i) = rho(i) * v(i) * (eps(i) + v(i)**2 / 2.0d0 + p(i) / rho(i))
  U(2,i) = rho(i) * (eps(i) + v(i)**2 / 2.0d0)
 enddo
-!F_next == F_(x+1/2); F_last == F_(x-1/2) in Lax-Friedrichs scheme 
+!F_next == F_(j+1/2); F_last == F_(j-1/2) in Lax-Friedrichs scheme 
 do i = 0, N-2
  F_next(0,i) = 0.5d0 * (F(0,i) + F(0,i+1) - lambda * (U(0,i+1) - U(0,i)))
  F_next(1,i) = 0.5d0 * (F(1,i) + F(1,i+1) - lambda * (U(1,i+1) - U(1,i)))
