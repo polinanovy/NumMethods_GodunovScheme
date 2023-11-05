@@ -31,9 +31,9 @@ do i = 0, N-1
 enddo
 end subroutine CalcLambda
 
-subroutine InitializeGrid(N, C, x_left, x_right, x, lambda, dx, dt)   !непонятно, что с t делать
+subroutine InitializeGrid(N, C, x_left, x_right, x, lambda, dx, dt)
 ! Subroutine for initialising the grid
-real(8) :: x_left, x_right, C
+real(8) :: x_left, x_right, C, lambda
 integer :: N, i
 real(8) :: dx, dt, x(0:N-1)
 dx = (x_right - x_left) / (N - 1)
@@ -57,6 +57,7 @@ end subroutine CalcEnergy
 subroutine Flux(N, rho, v, p, E, lambda, F_next, F_last)
 !Subroutine for flux calculation according to Lax-Friedrichs scheme
 integer :: i, N
+real(8) :: lambda
 real(8) :: rho(:), v(:), p(:), E(:)
 real(8) :: F(:,:), U(:,:)
 real(8) :: F_next(:,:), F_last(:,:)
@@ -99,9 +100,20 @@ integer :: N, i
 do i = 0, N-1
  rho(i) = rho_old(i) - dt * (F_next(0, i) - F_last(0, i)) / dx
  v(i) = rho_old(i) * v_old(i) / rho(i) - dt * (F_next(1, i) - F_last(1, i)) / (dx * rho(i))
- E(i) = -v(i)**2 / 2.0d0 + rho_old(i) * (E_old(i) + v_old(i)**2 / 2.0d0) / rho(i) - dt * (F_next(2, i) - F_last(2, i)) / (dx * rho(i))
+ E(i) = -v(i)**2 / 2.0d0 + rho_old(i) * (E_old(i) + v_old(i)**2 / 2.0d0) / rho(i) &
+       &- dt * (F_next(2, i) - F_last(2, i)) / (dx * rho(i))
  p(i) = rho(i) * E(i) * (g - 1)
 enddo
 end subroutine GDEquations
+
+subroutine SaveData(N, rho, v, p, x, t_stop, C)
+real(8) :: x(0:N-1), rho(0:N-1), v(0:N-1), p(0:N-1), C, t_stop
+integer :: N, i
+open(unit = 2, file = 'RESULT')
+write(2,*) N, C, t_stop
+do i = 0, N-1
+	write(2,*) x(i), rho(i), v(i), p(i)
+enddo
+end subroutine SaveData
 
 end module
