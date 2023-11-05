@@ -62,7 +62,7 @@ real(8) :: rho(0:N-1), v(0:N-1), p(0:N-1), E(0:N-1)
 real(8), allocatable :: F(:,:), U(:,:)
 real(8) :: F_next(0:2,0:N-1), F_last(0:2,0:N-1)
 !Components of u and F vectors according (6.74)
-allocate(F(3,N), U(3,N))
+allocate(F(0:2,0:N-1), U(0:2,0:N-1))
 do i = 0, N-1
 	F(0,i) = rho(i) * v(i)
 	U(0,i) = rho(i)
@@ -73,9 +73,9 @@ do i = 0, N-1
 enddo
 !F_next == F_(j+1/2); F_last == F_(j-1/2) in Lax-Friedrichs scheme 
 do i = 0, N-2
-	F_next(0,i) = 0.5d0 * (F(0,i) + F(0,i+1) - 0.5d0 * lambda * (U(0,i+1) - U(0,i)))
-	F_next(1,i) = 0.5d0 * (F(1,i) + F(1,i+1) - 0.5d0 * lambda * (U(1,i+1) - U(1,i)))
-	F_next(2,i) = 0.5d0 * (F(2,i) + F(2,i+1) - 0.5d0 * lambda * (U(2,i+1) - U(2,i)))
+	F_next(0,i) = 0.5d0 * (F(0,i) + F(0,i+1) - lambda * (U(0,i+1) - U(0,i)))
+	F_next(1,i) = 0.5d0 * (F(1,i) + F(1,i+1) - lambda * (U(1,i+1) - U(1,i)))
+	F_next(2,i) = 0.5d0 * (F(2,i) + F(2,i+1) - lambda * (U(2,i+1) - U(2,i)))
 enddo
 F_next(0,N-1) = F(0,N-1)
 F_next(1,N-1) = F(1,N-1)
@@ -110,7 +110,7 @@ subroutine SaveData(N, rho, v, p, x, t_stop, C)
 real(8) :: x(0:N-1), rho(0:N-1), v(0:N-1), p(0:N-1), C, t_stop
 integer :: N, i
 open(unit = 2, file = 'RESULT')
-write(2,*) N, C, t_stop
+!write(2,*) N, C, t_stop
 do i = 0, N-1
 	write(2,*) x(i), rho(i), v(i), p(i)
 enddo
