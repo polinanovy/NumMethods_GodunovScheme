@@ -6,5 +6,7 @@ modd.mod modd.o: modd.f95
 	gfortran -c modd.f95
 clear:
 	rm -f *.o *.mod main
+plot: main RESULT
+	python3 plot.py
 result: main
 	./main

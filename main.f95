@@ -21,16 +21,16 @@ allocate(x(N))
 ! Get grid step sizes dx and dt, as well as the array of coordinates "x":
 call InitializeGrid(N, C, x_left, x_right, x, lambda, dx, dt) 
 
-allocate(rho(N), v(N), p(N), E(N))
+allocate(rho(0:N-1), v(0:N-1), p(0:N-1), E(0:N-1))
 do i = 0, N/2-1
- rho(i) = u_left(0)
- v(i)   = u_left(1)
- p(i)   = u_left(2)
+	rho(i) = u_left(0)
+	v(i)   = u_left(1)
+	p(i)   = u_left(2)
 enddo
 do i = N/2, N-1
- rho(i) = u_right(0)
- v(i)   = u_right(1)
- p(i)   = u_right(2)
+	rho(i) = u_right(0)
+	v(i)   = u_right(1)
+	p(i)   = u_right(2)
 enddo
 call CalcEnergy(N, rho, p, E)
 
@@ -39,17 +39,17 @@ t = dt
 
 allocate(F_next(3,N), F_last(3,N), rho_new(N), v_new(N), E_new(N), p_new(N))
 do while (t <= t_stop)
- call CalcLambda(N, rho, v, p, lambda)
- call Flux(N, rho, v, p, E, lambda, F_next, F_last)
- call GDEquations(N, rho, v, E, dt, dx, F_next, F_last, rho_new, v_new, E_new, p_new)
- do i = 0, N
-  rho(i) = rho_new(i)
-  v(i) = v_new(i)
-  E(i) = E_new(i)
-  p(i) = p_new(i)
- enddo
- ! Update timer:
- t = t + dt
+	call CalcLambda(N, rho, v, p, lambda)
+	call Flux(N, rho, v, p, E, lambda, F_next, F_last)
+	call GDEquations(N, rho, v, E, dt, dx, F_next, F_last, rho_new, v_new, E_new, p_new)
+	do i = 0, N-1
+		rho(i) = rho_new(i)
+		v(i) = v_new(i)
+		E(i) = E_new(i)
+		p(i) = p_new(i)
+	enddo
+	! Update timer:
+	t = t + dt
 end do
 
 ! Save data to file 'RESULT':

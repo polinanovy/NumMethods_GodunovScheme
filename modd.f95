@@ -19,18 +19,6 @@ read(1, *) x_left
 read(1, *) x_right
 end subroutine InitializeParameters
 
-subroutine CalcLambda(N, rho, v, p, lambda)
-!Subroutine for lambda calculation
-real(8) :: rho(0:N-1), v(0:N-1), p(0:N-1)
-real(8) :: lambda, cs
-integer :: N, i
-lambda = 0
-do i = 0, N-1
- cs = sqrt(g * p(i) / rho(i))
- lambda = max(lambda, abs(v(i)) + cs)
-enddo
-end subroutine CalcLambda
-
 subroutine InitializeGrid(N, C, x_left, x_right, x, lambda, dx, dt)
 ! Subroutine for initialising the grid
 real(8) :: x_left, x_right, C, lambda
@@ -50,9 +38,21 @@ real(8) :: rho(0:N-1), p(0:N-1)
 real(8) :: E(0:N-1)
 integer :: N, i
 do i = 0, N-1
- E(i) = p(i) / (rho(i)*(g-1))
+	E(i) = p(i) / (rho(i) * (g - 1))
 enddo
 end subroutine CalcEnergy
+
+subroutine CalcLambda(N, rho, v, p, lambda)
+!Subroutine for lambda calculation
+real(8) :: rho(0:N-1), v(0:N-1), p(0:N-1)
+real(8) :: lambda, cs
+integer :: N, i
+lambda = 0
+do i = 0, N-1
+	cs = sqrt(g * p(i) / rho(i)) ! adiabatic speed of sound for i-th cell
+	lambda = max(lambda, abs(v(i)) + cs)
+enddo
+end subroutine CalcLambda
 
 subroutine Flux(N, rho, v, p, E, lambda, F_next, F_last)
 !Subroutine for flux calculation according to Lax-Friedrichs scheme
@@ -64,18 +64,18 @@ real(8) :: F_next(0:2,0:N-1), F_last(0:2,0:N-1)
 !Components of u and F vectors according (6.74)
 allocate(F(3,N), U(3,N))
 do i = 0, N-1
- F(0,i) = rho(i) * v(i)
- U(0,i) = rho(i)
- F(1,i) = rho(i) * v(i)**2 + p(i)
- U(1,i) = rho(i) * v(i)
- F(2,i) = rho(i) * v(i) * (E(i) + v(i)**2 / 2.0d0 + p(i) / rho(i))
- U(2,i) = rho(i) * (E(i) + v(i)**2 / 2.0d0)
+	F(0,i) = rho(i) * v(i)
+	U(0,i) = rho(i)
+	F(1,i) = rho(i) * v(i)**2 + p(i)
+	U(1,i) = rho(i) * v(i)
+	F(2,i) = rho(i) * v(i) * (E(i) + v(i)**2 / 2.0d0 + p(i) / rho(i))
+	U(2,i) = rho(i) * (E(i) + v(i)**2 / 2.0d0)
 enddo
 !F_next == F_(j+1/2); F_last == F_(j-1/2) in Lax-Friedrichs scheme 
 do i = 0, N-2
- F_next(0,i) = 0.5d0 * (F(0,i) + F(0,i+1) - lambda * (U(0,i+1) - U(0,i)))
- F_next(1,i) = 0.5d0 * (F(1,i) + F(1,i+1) - lambda * (U(1,i+1) - U(1,i)))
- F_next(2,i) = 0.5d0 * (F(2,i) + F(2,i+1) - lambda * (U(2,i+1) - U(2,i)))
+	F_next(0,i) = 0.5d0 * (F(0,i) + F(0,i+1) - 0.5d0 * lambda * (U(0,i+1) - U(0,i)))
+	F_next(1,i) = 0.5d0 * (F(1,i) + F(1,i+1) - 0.5d0 * lambda * (U(1,i+1) - U(1,i)))
+	F_next(2,i) = 0.5d0 * (F(2,i) + F(2,i+1) - 0.5d0 * lambda * (U(2,i+1) - U(2,i)))
 enddo
 F_next(0,N-1) = F(0,N-1)
 F_next(1,N-1) = F(1,N-1)
@@ -84,9 +84,9 @@ F_last(0,0) = F(0,0)
 F_last(1,0) = F(1,0)
 F_last(2,0) = F(2,0)
 do i = 1, N-1
- F_last(0,i) = 0.5d0 * (F(0,i-1) + F(0,i) - lambda * (U(0,i) - U(0,i-1)))
- F_last(1,i) = 0.5d0 * (F(1,i-1) + F(1,i) - lambda * (U(1,i) - U(1,i-1)))
- F_last(2,i) = 0.5d0 * (F(2,i-1) + F(2,i) - lambda * (U(2,i) - U(2,i-1)))
+	F_last(0,i) = 0.5d0 * (F(0,i-1) + F(0,i) - lambda * (U(0,i) - U(0,i-1)))
+	F_last(1,i) = 0.5d0 * (F(1,i-1) + F(1,i) - lambda * (U(1,i) - U(1,i-1)))
+	F_last(2,i) = 0.5d0 * (F(2,i-1) + F(2,i) - lambda * (U(2,i) - U(2,i-1)))
 enddo
 deallocate(F, U)
 end subroutine Flux
@@ -98,11 +98,11 @@ real(8) :: rho_old(0:N-1), v_old(0:N-1), E_old(0:N-1), F_next(0:2,0:N-1), F_last
 real(8) :: rho(0:N-1), v(0:N-1), E(0:N-1), p(0:N-1)
 integer :: N, i
 do i = 0, N-1
- rho(i) = rho_old(i) - dt * (F_next(0, i) - F_last(0, i)) / dx
- v(i) = rho_old(i) * v_old(i) / rho(i) - dt * (F_next(1, i) - F_last(1, i)) / (dx * rho(i))
- E(i) = -v(i)**2 / 2.0d0 + rho_old(i) * (E_old(i) + v_old(i)**2 / 2.0d0) / rho(i) &
-       &- dt * (F_next(2, i) - F_last(2, i)) / (dx * rho(i))
- p(i) = rho(i) * E(i) * (g - 1)
+	rho(i) = rho_old(i) - dt * (F_next(0, i) - F_last(0, i)) / dx
+	v(i) = rho_old(i) * v_old(i) / rho(i) - dt * (F_next(1, i) - F_last(1, i)) / (dx * rho(i))
+	E(i) = -v(i)**2 / 2.0d0 + rho_old(i) * (E_old(i) + v_old(i)**2 / 2.0d0) / rho(i) &
+	& - dt * (F_next(2, i) - F_last(2, i)) / (dx * rho(i))
+	p(i) = rho(i) * E(i) * (g - 1)
 enddo
 end subroutine GDEquations
 
