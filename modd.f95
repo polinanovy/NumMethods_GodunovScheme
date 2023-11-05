@@ -8,7 +8,7 @@ subroutine InitializeParameters(u_left, u_right, t_stop, N, C, x_left, x_right)
 ! Subroutine for setting model parameters
 integer :: N, i
 real(8) :: C, t_stop, x_left, x_right
-real(8), allocatable :: u_left(:), u_right(:)
+real(8) :: u_left(0:2), u_right(0:2)
 open(unit = 1, file = 'INPUT')
 read(1, *) (u_left(i), i=0,2)
 read(1, *) (u_right(i), i=0,2)
@@ -21,7 +21,7 @@ end subroutine InitializeParameters
 
 subroutine CalcLambda(N, rho, v, p, lambda)
 !Subroutine for lambda calculation
-real(8) :: rho(:), v(:), p(:)
+real(8) :: rho(0:N-1), v(0:N-1), p(0:N-1)
 real(8) :: lambda, cs
 integer :: N, i
 lambda = 0
@@ -46,8 +46,8 @@ end subroutine InitializeGrid
 
 subroutine CalcEnergy(N, rho, p, E)
 !Subroutine for energy calculation
-real(8) :: rho(:), p(:)
-real(8) :: E(:)
+real(8) :: rho(0:N-1), p(0:N-1)
+real(8) :: E(0:N-1)
 integer :: N, i
 do i = 0, N-1
  E(i) = p(i) / (rho(i)*(g-1))
@@ -58,16 +58,16 @@ subroutine Flux(N, rho, v, p, E, lambda, F_next, F_last)
 !Subroutine for flux calculation according to Lax-Friedrichs scheme
 integer :: i, N
 real(8) :: lambda
-real(8) :: rho(:), v(:), p(:), E(:)
-real(8) :: F(:,:), U(:,:)
-real(8) :: F_next(:,:), F_last(:,:)
+real(8) :: rho(0:N-1), v(0:N-1), p(0:N-1), E(0:N-1)
+real(8), allocatable :: F(:,:), U(:,:)
+real(8) :: F_next(0:2,0:N-1), F_last(0:2,0:N-1)
 !Components of u and F vectors according (6.74)
 allocate(F(3,N), U(3,N))
 do i = 0, N-1
  F(0,i) = rho(i) * v(i)
  U(0,i) = rho(i)
  F(1,i) = rho(i) * v(i)**2 + p(i)
- U(1,i) = f1(i)
+ U(1,i) = rho(i) * v(i)
  F(2,i) = rho(i) * v(i) * (E(i) + v(i)**2 / 2.0d0 + p(i) / rho(i))
  U(2,i) = rho(i) * (E(i) + v(i)**2 / 2.0d0)
 enddo
@@ -88,14 +88,14 @@ do i = 1, N-1
  F_last(1,i) = 0.5d0 * (F(1,i-1) + F(1,i) - lambda * (U(1,i) - U(1,i-1)))
  F_last(2,i) = 0.5d0 * (F(2,i-1) + F(2,i) - lambda * (U(2,i) - U(2,i-1)))
 enddo
-deallocate(F(3,N), U(3,N))
+deallocate(F, U)
 end subroutine Flux
 
 subroutine GDEquations(N, rho_old, v_old, E_old, dt, dx, F_next, F_last, rho, v, E, p)
 !Subroutine for density, velocity and energy calculation according (6.70)-(6.73)
 real(8) :: dt, dx
-real(8) :: rho_old(:), v_old(:), E_old(:), F_next(:), F_last(:)
-real(8) :: rho(:), v(:), E(:), p(:)
+real(8) :: rho_old(0:N-1), v_old(0:N-1), E_old(0:N-1), F_next(0:2,0:N-1), F_last(0:2,0:N-1)
+real(8) :: rho(0:N-1), v(0:N-1), E(0:N-1), p(0:N-1)
 integer :: N, i
 do i = 0, N-1
  rho(i) = rho_old(i) - dt * (F_next(0, i) - F_last(0, i)) / dx

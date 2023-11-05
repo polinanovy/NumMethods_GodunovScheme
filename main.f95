@@ -3,20 +3,21 @@ use modd
 
 implicit none
 
-integer :: N
+integer :: N, i
 real(8) :: C
 real(8), allocatable :: u_left(:), u_right(:)
 real(8) :: dx, dt, t, t_stop
 real(8) :: x_left, x_right
 real(8) :: lambda
-real(8) :: rho(:), v(:), p(:), E(:)
-real(8) :: F_next(:,:), F_last(:,:), rho_new(:), v_new(:), E_new(:), p_new(:)
+real(8), allocatable :: rho(:), v(:), p(:), E(:), x(:)
+real(8), allocatable :: F_next(:,:), F_last(:,:), rho_new(:), v_new(:), E_new(:), p_new(:)
 
 allocate (u_left(3), u_right(3))
 
 ! Read the following parameters from file 'INPUT':
 call InitializeParameters(u_left, u_right, t_stop, N, C, x_left, x_right)
 
+allocate(x(N))
 ! Get grid step sizes dx and dt, as well as the array of coordinates "x":
 call InitializeGrid(N, C, x_left, x_right, x, lambda, dx, dt) 
 
@@ -54,6 +55,6 @@ end do
 ! Save data to file 'RESULT':
 call SaveData(N, rho, v, p, x, t_stop, C)
 
-deallocate(u_left, u_right, rho, v, p, E, F_next, F_last, rho_new, v_new, E_new, p_new)
+deallocate(u_left, u_right, x, rho, v, p, E, F_next, F_last, rho_new, v_new, E_new, p_new)
 
 end
