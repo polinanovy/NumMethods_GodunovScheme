@@ -32,6 +32,14 @@ do i = 1, N-2
 enddo
 end subroutine InitializeGrid
 
+subroutine TimeStep(N, C, lambda, dx, dt)
+! Subroutine for initialising time step
+real(8) :: C, lambda
+integer :: N, i
+real(8) :: dx, dt, x(0:N-1)
+dt = C * dx / lambda
+end subroutine TimeStep
+
 subroutine CalcEnergy(N, rho, p, E)
 !Subroutine for energy calculation
 real(8) :: rho(0:N-1), p(0:N-1)
@@ -91,19 +99,29 @@ enddo
 deallocate(F, U)
 end subroutine Flux
 
-subroutine GDEquations(N, rho_old, v_old, E_old, dt, dx, F_next, F_last, rho, v, E, p)
+subroutine GDEquations(N, rho_old, v_old, E_old, dt, dx, F_next, F_last, rho, v, E, p, u_left, u_right)
 !Subroutine for density, velocity and energy calculation according (6.70)-(6.73)
 real(8) :: dt, dx
 real(8) :: rho_old(0:N-1), v_old(0:N-1), E_old(0:N-1), F_next(0:2,0:N-1), F_last(0:2,0:N-1)
 real(8) :: rho(0:N-1), v(0:N-1), E(0:N-1), p(0:N-1)
+real(8) :: u_left(0:2), u_right(0:2)
 integer :: N, i
-do i = 0, N-1
+rho(0) = u_left(0)
+rho(N-1) = u_right(0)
+v(0) = u_left(1)
+v(N-1) = u_right(1)
+p(0) = u_left(2)
+p(N-1) = u_right(2)
+E(0) = p(0) / (rho(0) * (g - 1))
+E(N-1) = p(N-1) / (rho(N-1) * (g - 1))
+do i = 1, N-2
 	rho(i) = rho_old(i) - dt * (F_next(0, i) - F_last(0, i)) / dx
 	v(i) = rho_old(i) * v_old(i) / rho(i) - dt * (F_next(1, i) - F_last(1, i)) / (dx * rho(i))
 	E(i) = -v(i)**2 / 2.0d0 + rho_old(i) * (E_old(i) + v_old(i)**2 / 2.0d0) / rho(i) &
 	& - dt * (F_next(2, i) - F_last(2, i)) / (dx * rho(i))
 	p(i) = rho(i) * E(i) * (g - 1)
 enddo
+
 end subroutine GDEquations
 
 subroutine SaveData(N, rho, v, p, x, t_stop, C)

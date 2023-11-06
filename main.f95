@@ -41,8 +41,9 @@ t = 0.d0
 allocate(F_next(0:2,0:N-1), F_last(0:2,0:N-1), rho_new(0:N-1), v_new(0:N-1), E_new(0:N-1), p_new(0:N-1))
 do while (t <= t_stop)
 	call CalcLambda(N, rho, v, p, lambda)
+	call TimeStep(N, C, lambda, dx, dt)
 	call Flux(N, rho, v, p, E, lambda, F_next, F_last)
-	call GDEquations(N, rho, v, E, dt, dx, F_next, F_last, rho_new, v_new, E_new, p_new)
+	call GDEquations(N, rho, v, E, dt, dx, F_next, F_last, rho_new, v_new, E_new, p_new, u_left, u_right)
 	rho = rho_new
 	v = v_new
 	E = E_new
